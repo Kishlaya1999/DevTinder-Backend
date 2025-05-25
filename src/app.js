@@ -3,7 +3,12 @@ const express = require("express");
 const app = express();
 
 app.get("/user", (req, res, next) => {
- throw new Error("abc xyz");
+  try {
+     throw new Error("abc xyz");
+
+  } catch (error) {
+    res.status(500).send("something went wrong (inside /user route handler)")
+  }
 })
 
 app.use("/",(err, req, res, next) => {
@@ -14,12 +19,8 @@ app.use("/",(err, req, res, next) => {
 
 /**
  * Error Handling: 
- * if we get some error then the app.use("/") will handle it
- * handler function basics 
- *  if we pass 
- *  - 2 arguments: 1st => requset, 2nd => response
- *  - 3 arguments: 1st => requset, 2nd => response, 3rd => next
- *  - 4 arguments: 1st => error, 2nd => request, 3rd => response, 4th => next
+ * We can also handler error using try catch block for each routeHandler function that we wrute in this case 
+ * the catch will get triggred and universal error handler would not be triggred
  */
 
 app.listen(3000, () => {
