@@ -3,13 +3,16 @@ const connectDB = require("./config/database");
 const app = express();
 const User = require("./models/user");
 
+// express.json is a middleware provided by express for converting the incomming body from request in appropriate format
+// express.json() => converts JSON body --> JS object
+app.use(express.json())
+
 app.post("/signup",async (req, res) => {
-  const user = new User({
-    firstName: "Sachin",
-    lastName: "Tendulkar",
-    emailId: "sachin@tendulkar.com",
-    password: "sachin@123",
-  })
+
+  // console.log(req?.body);
+  const userObj = req.body;
+  
+  const user = new User(userObj)
 
   try {
     await user.save();
@@ -17,9 +20,9 @@ app.post("/signup",async (req, res) => {
   } catch (error) {
     res.status(500).send("Something went wrong user can't be saved in DB")
   }
-});
 
-// Establishing the connection with db then starting to listen for request in port 3000
+})
+
 connectDB().then(() => {
     console.log("Database connection established...");
     app.listen(3000, () => {
