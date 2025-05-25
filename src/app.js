@@ -1,28 +1,31 @@
 const express = require("express");
-
+const connectDB = require("./config/database");
 const app = express();
+const User = require("./models/user");
 
-app.get("/user", (req, res, next) => {
+app.post("/signup",async (req, res) => {
+  const user = new User({
+    firstName: "Sachin",
+    lastName: "Tendulkar",
+    emailId: "sachin@tendulkar.com",
+    password: "sachin@123",
+  })
+
   try {
-     throw new Error("abc xyz");
-
+    await user.save();
+    res.send("User Saved Successfully!!")
   } catch (error) {
-    res.status(500).send("something went wrong (inside /user route handler)")
+    res.status(500).send("Something went wrong user can't be saved in DB")
   }
-})
-
-app.use("/",(err, req, res, next) => {
-  if(err) {
-    res.status(500).send("something went wrong");
-  }
-} )
-
-/**
- * Error Handling: 
- * We can also handler error using try catch block for each routeHandler function that we wrute in this case 
- * the catch will get triggred and universal error handler would not be triggred
- */
-
-app.listen(3000, () => {
-  console.log("Server is sucessfully listning on PORT  3000");
 });
+
+// Establishing the connection with db then starting to listen for request in port 3000
+connectDB().then(() => {
+    console.log("Database connection established...");
+    app.listen(3000, () => {
+      console.log("Server is successfully listening on port 3000...");
+    });
+  })
+  .catch((err) => {
+    console.error("Database cannot be connected!!");
+  });
