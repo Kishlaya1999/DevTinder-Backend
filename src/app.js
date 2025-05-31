@@ -2,19 +2,23 @@ const express = require("express");
 const connectDB = require("./config/database");
 const app = express();
 const User = require("./models/user");
+const { validateSignUpData } = require("./utils/validation");
 
 // express.json is a middleware provided by express for converting the incomming body from request in appropriate format
 // express.json() => converts JSON body --> JS object
 app.use(express.json())
 
-app.post("/signup",async (req, res) => {
+app.post("/signup", async (req, res) => {
 
-  // console.log(req?.body);
-  const userObj = req.body;
-  
-  const user = new User(userObj)
+
 
   try {
+    // Validation for data;
+    validateSignUpData(req);
+
+
+
+    const user = new User(req.body)
     await user.save();
     res.send("User Saved Successfully!!")
   } catch (error) {
@@ -24,13 +28,13 @@ app.post("/signup",async (req, res) => {
 });
 
 app.get("/user", async (req, res) => {
-  const {emailId}= req.body;
+  const { emailId } = req.body;
   console.log(emailId);
-  
+
   try {
-    const user = await User.findOne({emailId : emailId});
-    
-    if(user.length === 0){
+    const user = await User.findOne({ emailId: emailId });
+
+    if (user.length === 0) {
       res.status(404).send("User Not found");
     } else {
       res.send(user);
@@ -42,7 +46,7 @@ app.get("/user", async (req, res) => {
 
 app.get("/feed", async (req, res) => {
   try {
-  const users = await User.find();
+    const users = await User.find();
     res.status(200).send(users);
   } catch (error) {
     req.status(500).send("Can't get users!! Something went wrong");
@@ -84,6 +88,7 @@ app.patch("/user/:userId", async (req, res) => {
       returnDocument: "after",
       runValidators: true,
     });
+    console.log(user);
     res.send("User updated successfully");
   } catch (err) {
     res.status(400).send("UPDATE FAILED:" + err.message);
@@ -91,7 +96,7 @@ app.patch("/user/:userId", async (req, res) => {
 });
 
 app.use("/", (err, req, res, next) => {
-  if(err){
+  if (err) {
     res.status(500).send("Route not defined");
   }
 })
@@ -99,11 +104,11 @@ app.use("/", (err, req, res, next) => {
 
 
 connectDB().then(() => {
-    console.log("Database connection established...");
-    app.listen(3000, () => {
-      console.log("Server is successfully listening on port 3000...");
-    });
-  })
+  console.log("Database connection established...");
+  app.listen(3000, () => {
+    console.log("Server is successfully listening on port 3000...");
+  });
+})
   .catch((err) => {
     console.error("Database cannot be connected!!");
   });
