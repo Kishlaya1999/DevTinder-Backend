@@ -18,9 +18,71 @@ app.post("/signup",async (req, res) => {
     await user.save();
     res.send("User Saved Successfully!!")
   } catch (error) {
-    res.status(500).send("Something went wrong user can't be saved in DB")
+    res.status(500).send(error.message)
   }
 
+});
+
+app.get("/user", async (req, res) => {
+  const {emailId}= req.body;
+  console.log(emailId);
+  
+  try {
+    const user = await User.findOne({emailId : emailId});
+    
+    if(user.length === 0){
+      res.status(404).send("User Not found");
+    } else {
+      res.send(user);
+    }
+  } catch (error) {
+    res.status(500).send("Something went wrong");
+  }
+})
+
+app.get("/feed", async (req, res) => {
+  try {
+  const users = await User.find();
+    res.status(200).send(users);
+  } catch (error) {
+    req.status(500).send("Can't get users!! Something went wrong");
+  }
+});
+
+// Detele a user from the database
+app.delete("/user", async (req, res) => {
+  const userId = req.body.userId;
+  try {
+    const user = await User.findByIdAndDelete({ _id: userId });
+    //const user = await User.findByIdAndDelete(userId);Add commentMore actions
+
+    res.send("User deleted successfully");
+  } catch (err) {
+    res.status(400).send("Something went wrong ");
+  }
+});
+
+// Update data of the user
+app.patch("/user", async (req, res) => {
+  const userId = req.body.userId;
+  const data = req.body;
+  try {
+    // returns a new updated object 
+    // runValidators: used to run the schma validation while updating the data
+    const user = await User.findByIdAndUpdate({ _id: userId }, data, {
+      returnDocument: "after",
+      runValidators: true,
+    });
+    res.send("User updated successfully");
+  } catch (err) {
+    res.status(400).send("Something went wrong ");
+  }
+});
+
+app.use("/", (err, req, res, next) => {
+  if(err){
+    res.status(500).send("Route not defined");
+  }
 })
 
 connectDB().then(() => {
