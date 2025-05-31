@@ -3,6 +3,7 @@ const connectDB = require("./config/database");
 const app = express();
 const User = require("./models/user");
 const { validateSignUpData } = require("./utils/validation");
+const bcrypt = require("bcrypt");
 
 // express.json is a middleware provided by express for converting the incomming body from request in appropriate format
 // express.json() => converts JSON body --> JS object
@@ -10,15 +11,21 @@ app.use(express.json())
 
 app.post("/signup", async (req, res) => {
 
-
-
   try {
     // Validation for data;
     validateSignUpData(req);
 
+    // Password encryption
+    const {firstName, lastName, emailId, password} = req.body;
 
+    const passwordHash = await bcrypt.hash(password, 10);
 
-    const user = new User(req.body)
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+    })
     await user.save();
     res.send("User Saved Successfully!!")
   } catch (error) {
