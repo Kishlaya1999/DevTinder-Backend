@@ -63,19 +63,30 @@ app.delete("/user", async (req, res) => {
 });
 
 // Update data of the user
-app.patch("/user", async (req, res) => {
-  const userId = req.body.userId;
+app.patch("/user/:userId", async (req, res) => {
+  const userId = req.params?.userId;
   const data = req.body;
+
   try {
-    // returns a new updated object 
-    // runValidators: used to run the schma validation while updating the data
+    // Only fieldNames which are there in ALLOWED_UPDATES can be updated if someother field is inclued in req.body then error would be thrown Update not allowed
+    // By doing this user won't be able to update field like emailId, firstName, etc.....  
+    const ALLOWED_UPDATES = ["photoUrl", "about", "gender", "age", "skills"];
+    const isUpdateAllowed = Object.keys(data).every((k) =>
+      ALLOWED_UPDATES.includes(k)
+    );
+    if (!isUpdateAllowed) {
+      throw new Error("Update not allowed");
+    }
+    if (data?.skills.length > 10) {
+      throw new Error("Skills cannot be more than 10");
+    }
     const user = await User.findByIdAndUpdate({ _id: userId }, data, {
       returnDocument: "after",
       runValidators: true,
     });
     res.send("User updated successfully");
   } catch (err) {
-    res.status(400).send("Something went wrong ");
+    res.status(400).send("UPDATE FAILED:" + err.message);
   }
 });
 
@@ -84,6 +95,8 @@ app.use("/", (err, req, res, next) => {
     res.status(500).send("Route not defined");
   }
 })
+
+
 
 connectDB().then(() => {
     console.log("Database connection established...");
