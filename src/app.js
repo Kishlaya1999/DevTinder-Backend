@@ -4,10 +4,13 @@ const app = express();
 const User = require("./models/user");
 const { validateSignUpData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
-
+const cookieParser = require("cookie-parser");
 // express.json is a middleware provided by express for converting the incomming body from request in appropriate format
 // express.json() => converts JSON body --> JS object
-app.use(express.json())
+app.use(express.json());
+
+// Middleware for reading incoming cookies form the client
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
 
@@ -47,11 +50,30 @@ app.post("/login", async (req, res) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if(isPasswordValid) {
+
+      // Add the token to the cookie and send the response back to the user
+      res.cookie("token","sdiufsidncuisdnflekcnfkfsdkfncukdfsdklcmvdn");
+
+
       res.send("User logged in sucessfully!!");
     } else{
       throw new Error("Invalid Credentials");
     };
 
+  } catch (error) {
+    res.status(500).send(error.message)
+  }
+});
+
+app.get("/profile", async (req, res) => {
+  try {
+
+    // getting the dummy cookie which is comming from the client
+    const cookies = req.cookies;
+    console.log(cookies);
+
+    res.send("sending cookie"); //{ token: 'sdiufsidncuisdnflekcnfkfsdkfncukdfsdklcmvdn' }
+    
   } catch (error) {
     res.status(500).send(error.message)
   }
