@@ -50,17 +50,12 @@ app.post("/login", async (req, res) => {
       throw new Error("Invalid Credentials");
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    // Using Schema method for some user specific task
+    const isPasswordValid = await user.validatePassword(password);
 
     if(isPasswordValid) {
 
-      // Create a JWT token
-      /*
-       *While creating the token we can hide some data in it 
-       *jwt.sign takes the data object and a secret key for it and returns a JWT token 
-       *Here we are passing userId as data and a dummy secret key with it 
-       */
-      const token = await jwt.sign({_id: user._id}, "jwtSecretKey");
+      const token = await user.getJWToken();
       
       // Add the token to the cookie and send the response back to the user
       res.cookie("token", token);  
