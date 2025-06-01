@@ -5,6 +5,8 @@ const User = require("./models/user");
 const { validateSignUpData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
+
 // express.json is a middleware provided by express for converting the incomming body from request in appropriate format
 // express.json() => converts JSON body --> JS object
 app.use(express.json());
@@ -51,9 +53,16 @@ app.post("/login", async (req, res) => {
 
     if(isPasswordValid) {
 
+      // Create a JWT token
+      /*
+       *While creating the token we can hide some data in it 
+       *jwt.sign takes the data object and a secret key for it and returns a JWT token 
+       *Here we are passing userId as data and a dummy secret key with it 
+       */
+      const token = await jwt.sign({_id: user._id}, "jwtSecretKey");
+      
       // Add the token to the cookie and send the response back to the user
-      res.cookie("token","sdiufsidncuisdnflekcnfkfsdkfncukdfsdklcmvdn");
-
+      res.cookie("token", token);  
 
       res.send("User logged in sucessfully!!");
     } else{
@@ -68,11 +77,27 @@ app.post("/login", async (req, res) => {
 app.get("/profile", async (req, res) => {
   try {
 
-    // getting the dummy cookie which is comming from the client
-    const cookies = req.cookies;
-    console.log(cookies);
+    /**
+     * Getting the token form the req send by the client
+     * If token not send with the request then we are throwing an error
+    */
+    const {token} = req.cookies;
+    if(!token) {
+      throw new Error("Access Denied: User not logged in");
+    }
 
-    res.send("sending cookie"); //{ token: 'sdiufsidncuisdnflekcnfkfsdkfncukdfsdklcmvdn' }
+    /**
+     * Decoding the jwt token using the token (coming in request) and the secret key which we have send while loggin in 
+     * We would be getting the data that we have send while loggin in i.e. _id (userId)
+     * Using which we will get the user from mongdb database and return to the client 
+     * By doing this we are sending the data of currently logged in user
+    */ 
+    const decodedToken = await jwt.verify(token, "jwtSecretKey");
+
+    // Extracting the _id form the token and sending the respective user to client
+    const {_id} = decodedToken;
+    const user = await User.findById(_id);
+    res.send(user);
     
   } catch (error) {
     res.status(500).send(error.message)
