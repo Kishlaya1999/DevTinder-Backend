@@ -60,4 +60,13 @@ authRouter.post("/login", async (req, res) => {
   }
 });
 
+authRouter.post("/logout", async (req, res) => {
+    /**
+     * setting the cookie token to null and also expiring it now
+     * if jwt token wouldn't be availabe then user is logged out
+    */
+    res.cookie("token", null, {expires: new Date(Date.now())});
+    res.send("User Logged Out");
+})
+
 module.exports = authRouter;
