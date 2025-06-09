@@ -75,4 +75,54 @@ requestRouter.post("/request/send/:status/:toUserId", userAuth, async (req, res)
   }
 });
 
+/**
+ * Connection Request reciever's api call
+ * */ 
+requestRouter.post("/request/review/:status/:requestId", userAuth, async (req, res) => {
+  try {
+    // Get the authenticated user from the request (set by userAuth middleware)
+    const loggedInUser = req.user;
+    // Extract status and requestId from the route parameters
+    const {status, requestId} = req.params;
+
+    // Define allowed statuses for reviewing a connection request
+    const allowedStatuses = ["accepted", "rejected"];
+    // Validate the status parameter
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).send({message: `Invalid status type: ${status}`});
+    }
+
+    /**
+     * Find the connection request by:
+     * - Its unique requestId
+     * - The logged-in user being the recipient (toUserId)
+     * - The request must currently have "interested" status
+     * - Logged-in users profile should be able to interact with the person who is interested in him
+     */
+    const connectionRequest = await ConnectionRequest.findOne({
+      _id: requestId,
+      toUserId: loggedInUser?._id,  // Someone send the connection request to logged-in user
+      status: "interested"          // Someone is interested in logged-in user
+    });
+
+    // If no such connection request exists, return 404
+    if(!connectionRequest) {
+      return res.status(404).json({message: "Connection Request not found !!"});
+    }
+
+    // Update the status of the connection request to the new status (accepted/rejected)
+    connectionRequest.status = status;
+
+    // Save the updated connection request to the database
+    const data = await connectionRequest.save();
+
+    // Respond with a success message and the updated data
+    return res.status(200).json({message: `Connection request ${status}`, data});
+
+  } catch (error) {
+    // Handle any errors and respond with a 500 status code
+    return res.status(500).send("Error:", error.message);
+  }
+});
+
 module.exports = requestRouter;
