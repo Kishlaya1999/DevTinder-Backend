@@ -3,9 +3,9 @@ const connectDB = require("./config/database");
 const app = express();
 const cookieParser = require("cookie-parser");
 
-const authRouter = require("./routers/auth");
-const profileRouter = require("./routers/profile");
-const requestRouter = require("./routers/request");
+const authRouter = require("./routers/auth.routes");
+const profileRouter = require("./routers/profile.routes");
+const requestRouter = require("./routers/request.routes");
 
 // express.json is a middleware provided by express for converting the incomming body from request in appropriate format
 // express.json() => converts JSON body --> JS object
@@ -13,7 +13,6 @@ app.use(express.json());
 
 // Middleware for reading incoming cookies form the client
 app.use(cookieParser());
-
 
 app.use("/", authRouter);
 app.use("/", profileRouter);
