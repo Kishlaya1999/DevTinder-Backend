@@ -3,6 +3,7 @@ const userRouter = express.Router();
 
 const { userAuth } = require("../middleware/auth");
 const ConnectionRequest = require("../models/connectionRequest");
+const User = require("../models/user");
 
 const FROM_USER_DATA = [
 	"firstName", "lastName", "age", "gender", "skills", "photoUrl", "about"
@@ -86,6 +87,76 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
 		// Handle any errors and respond with a 500 status code.
 		return res.send("Error: ", message.error);
 	}
-})
+});
+
+userRouter.get("/feed", userAuth, async (req, res) => {
+	try {
+		const loggedInUser = req.user;
+
+		/*
+		Profiles that the logged-in user should NOT see in their feed:
+		- Their own profile
+		- Users who are already connected to the logged-in user
+		- Users who have been ignored by the logged-in user
+		- Users for whom the loggedIn user has already shown interest
+		- Users who have ignored the logged-in user (i.e., if another user has ignored the logged-in user, their profile should not be shown)
+
+		/*
+		Example:
+		Suppose Alice is the logged-in user. The following users exist in the system:
+		- Bob
+		- Charlie
+		- Diana
+		- Eve
+		- Frank
+
+		Relationships and actions:
+		- Alice is already connected with Bob.
+		- Alice has ignored Charlie.
+		- Alice has already shown interest in Diana.
+		- Eve has ignored Alice.
+		- Frank has no prior interaction with Alice.
+
+		According to the above criteria, Alice's feed should NOT show:
+		- Alice (her own profile)
+		- Bob (already connected)
+		- Charlie (ignored by Alice)
+		- Diana (Alice already showed interest)
+		- Eve (ignored Alice)
+
+		Only Frank will appear in Alice's feed, as he does not match any exclusion criteria.
+		*/
+
+		// Find all connection requests where the logged-in user is either the sender or receiver.
+		// This helps us identify users who are already connected, ignored, or have pending requests with the logged-in user.
+		const connectionRequests = await ConnectionRequest.find({
+			$or: [{ toUserId: loggedInUser?._id }, { fromUserId: loggedInUser }]
+		}).select("toUserId fromUserId");
+
+		// Create a set to store user IDs that should be hidden from the feed
+		const hideUsersFromFeed = new Set();
+
+		// Add both sender and receiver IDs from each connection request to the exclusion set
+		connectionRequests.forEach((req) => {
+			hideUsersFromFeed.add(req.fromUserId.toString());
+			hideUsersFromFeed.add(req.toUserId.toString());
+		});
+
+		// Query for users who are NOT in the exclusion set and are not the logged-in user
+		// This ensures the feed only shows potential new connections
+		const usersForLoggedInUserFeed = await User.find({
+			$and: [
+				{ _id: { $nin: Array.from(hideUsersFromFeed) } },
+				{ _id: { $ne: loggedInUser?._id } }
+			]
+		}).select(FROM_USER_DATA);
+
+		// Send the filtered user profiles as the feed
+		return res.status(200).send({ data: usersForLoggedInUserFeed });
+	} catch (error) {
+		return res.status(500).send("Error:", error.message);
+		
+	}
+});
 
 module.exports = userRouter;
