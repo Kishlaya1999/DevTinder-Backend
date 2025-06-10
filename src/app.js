@@ -7,6 +7,13 @@ const authRouter = require("./routers/auth.routes");
 const profileRouter = require("./routers/profile.routes");
 const requestRouter = require("./routers/request.routes");
 const userRouter = require("./routers/users.routes");
+const cors = require("cors");
+
+// Enable Cross-Origin Resource Sharing (CORS) for the frontend application
+app.use(cors({
+  origin: "http://localhost:5173", // Allow requests only from this frontend origin
+  credentials: true,               // Allow cookies and credentials to be sent with requests
+}));
 
 // express.json is a middleware provided by express for converting the incomming body from request in appropriate format
 // express.json() => converts JSON body --> JS object
@@ -35,3 +42,11 @@ connectDB().then(() => {
   .catch((err) => {
     console.error("Database cannot be connected!!");
   });
+
+/*
+CORS Middleware Explanation:
+- Allows the frontend running at http://localhost:5173 to make requests to this backend.
+- credentials: true enables cookies, authorization headers, or TLS client certificates to be sent.
+- This is essential for authentication and session management when frontend and backend are on different ports/domains during development.
+- Prevents requests from unauthorized origins, improving security.
+*/
