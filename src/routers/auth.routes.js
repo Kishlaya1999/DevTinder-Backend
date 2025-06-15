@@ -22,8 +22,15 @@ authRouter.post("/signup", async (req, res) => {
       emailId,
       password: passwordHash,
     })
-    await user.save();
-    res.send("User Saved Successfully!!")
+    const savedUser = await user.save();
+    console.log(savedUser);
+
+    const token = await savedUser.getJWToken();
+    console.log(token);
+
+    res.cookie("token", token);
+
+    res.json({ message: "User Signup Successfull", data: savedUser });
   } catch (error) {
     res.status(500).send(error.message)
   }
@@ -37,7 +44,7 @@ authRouter.post("/login", async (req, res) => {
     const user = await User.findOne({ emailId: emailId });
 
     if (!user) {
-      throw new Error("Invalid Credentials");
+      return res.status(401).json({ message: "Invalid Credentials" });
     }
 
     // Using Schema method for some user specific task
@@ -52,7 +59,7 @@ authRouter.post("/login", async (req, res) => {
 
       res.json({ message: "User logged in sucessfully!!", data: user });
     } else {
-      throw new Error("Invalid Credentials");
+      return res.status(401).json({ message: "Invalid Credentials" });
     };
 
   } catch (error) {
