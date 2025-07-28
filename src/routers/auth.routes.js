@@ -26,7 +26,6 @@ authRouter.post("/signup", async (req, res) => {
     console.log(savedUser);
 
     const token = await savedUser.getJWToken();
-    console.log(token);
 
     res.cookie("token", token);
 

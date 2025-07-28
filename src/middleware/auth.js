@@ -8,7 +8,6 @@ const userAuth = async (req, res, next) => {
 				* If token not send with the request then we are throwing an error
 		*/
 		const { token } = req.cookies;
-		console.log(token);
 
 		if (!token) {
 			return res.status(401).send({ message: "Your are not logged !!" })
