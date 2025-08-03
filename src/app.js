@@ -8,6 +8,7 @@ const profileRouter = require("./routers/profile.routes");
 const requestRouter = require("./routers/request.routes");
 const userRouter = require("./routers/users.routes");
 const cors = require("cors");
+require('dotenv').config()
 
 // Enable Cross-Origin Resource Sharing (CORS) for the frontend application
 app.use(cors({
@@ -35,7 +36,7 @@ app.use("/", (err, req, res, next) => {
 
 connectDB().then(() => {
   console.log("Database connection established...");
-  app.listen(3000, () => {
+  app.listen(process.env.PORT, () => {
     console.log("Server is successfully listening on port 3000...");
   });
 })

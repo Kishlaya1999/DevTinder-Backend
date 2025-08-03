@@ -76,7 +76,7 @@ userSchema.methods.getJWToken = async function () {
 	 *jwt.sign takes the data object and a secret key for it and returns a JWT token 
 	 *Here we are passing userId as data and a dummy secret key with it 
 	 */
-	const token = await jwt.sign({ _id: user._id }, "jwtSecretKey", { expiresIn: "1d" });
+	const token = await jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
 	return token;
 };

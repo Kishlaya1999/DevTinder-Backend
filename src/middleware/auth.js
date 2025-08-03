@@ -19,7 +19,7 @@ const userAuth = async (req, res, next) => {
 		 * Using which we will get the user from mongdb database and return to the client 
 		 * By doing this we are sending the data of currently logged in user
 		*/
-		const decodedObj = jwt.verify(token, "jwtSecretKey");
+		const decodedObj = jwt.verify(token, process.env.JWT_SECRET);
 
 		// Extracting the _id form the decodedObj and attaching it to the request so the the handler can access it
 		const { _id } = decodedObj;
