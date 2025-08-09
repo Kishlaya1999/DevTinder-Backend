@@ -2,12 +2,14 @@ const express = require("express");
 const connectDB = require("./config/database");
 const app = express();
 const cookieParser = require("cookie-parser");
+const http = require("http");
 
 const authRouter = require("./routers/auth.routes");
 const profileRouter = require("./routers/profile.routes");
 const requestRouter = require("./routers/request.routes");
 const userRouter = require("./routers/users.routes");
 const cors = require("cors");
+const initializeSocket = require("./utils/socket");
 require('dotenv').config()
 
 // Enable Cross-Origin Resource Sharing (CORS) for the frontend application
@@ -28,6 +30,9 @@ app.use("/", profileRouter);
 app.use("/", requestRouter);
 app.use("/", userRouter);
 
+const server = http.createServer(app);
+initializeSocket(server);
+
 app.use("/", (err, req, res, next) => {
   if (err) {
     res.status(500).send("Route not defined");
@@ -36,7 +41,7 @@ app.use("/", (err, req, res, next) => {
 
 connectDB().then(() => {
   console.log("Database connection established...");
-  app.listen(process.env.PORT, () => {
+  server.listen(process.env.PORT, () => {
     console.log("Server is successfully listening on port 3000...");
   });
 })
